@@ -1,0 +1,70 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 09/03/2026 07:30:03 PM
+// Design Name: 
+// Module Name: ahb_ram_slave
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module ahb_ram_slave(
+
+
+    input  wire        HCLK,
+    input  wire        HRESETn,
+
+    input  wire [31:0] HADDR,
+    input  wire [31:0] HWDATA,
+    input  wire        HWRITE,
+    input  wire [1:0]  HTRANS,
+    input  wire [2:0]  HSIZE,
+    input  wire [2:0]  HBURST,
+
+    output reg  [31:0] HRDATA,
+    output reg          HREADY
+);
+
+    //================================================
+    // RAM: 8 locations x 32 bits (byte addr 0x00 - 0x1C)
+    //================================================
+
+    reg [31:0] mem [0:7];
+    integer i;
+
+    always @(posedge HCLK or negedge HRESETn)
+    begin
+        if(!HRESETn)
+        begin
+            HREADY <= 1'b1;
+            HRDATA <= 32'd0;
+            for(i = 0; i < 8; i = i + 1)
+                mem[i] <= 32'd0;
+        end
+        else
+        begin
+            HREADY <= 1'b1;   // always ready, single-cycle access
+
+            if((HTRANS == 2'b10) || (HTRANS == 2'b11))
+            begin
+                if(HWRITE)
+                    mem[HADDR[4:2]] <= HWDATA;
+                else
+                    HRDATA <= mem[HADDR[4:2]];
+            end
+        end
+    end
+
+endmodule
